@@ -1,24 +1,19 @@
 const express = require('express');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
+const { logMiddleware } = require('./middlewares');
 
-app.use(express.json()); // Middleware to parse JSON requests
+app.use(express.json()); 
 
-// Middleware log request
-app.use((req, res, next) => {
-  console.log(`Received ${req.method} request to ${req.path}`);
-  next();
-});
+app.use(logMiddleware);
 
-// Sample user data
 const users = [
   { username: 'alice', apiKey: 'alice@123' },
   { username: 'bob', apiKey: 'bob@123' },
   { username: 'charlie', apiKey: 'charlie@123' }
 ];
 
-// Middleware to check API key
-function checkAPIKey(req, res, next) {
+const checkAPIKey=(req, res, next) =>{
   const apiKey = req.query.apiKey;
   const user = users.find(u => u.apiKey === apiKey);
 
@@ -30,14 +25,12 @@ function checkAPIKey(req, res, next) {
   next();
 }
 
-// Sample resource data
 const resourceAccessCounts = {
   student: { alice: 0, bob: 0, charlie: 0 },
   teacher: { alice: 0, bob: 0, charlie: 0 },
   subject: { alice: 0, bob: 0, charlie: 0 }
 };
 
-// Routes
 app.get('/student', checkAPIKey, (req, res) => {
   const user = req.user;
   resourceAccessCounts.student[user.username]++;
@@ -56,7 +49,6 @@ app.get('/subject', checkAPIKey, (req, res) => {
   res.json({ accessCount: resourceAccessCounts.subject[user.username] });
 });
 
-// Statistic endpoint
 app.get('/system/statistic', (req, res) => {
   const statistics = users.map(user => {
     return {
@@ -70,7 +62,6 @@ app.get('/system/statistic', (req, res) => {
   res.json(statistics);
 });
 
-// Start server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
